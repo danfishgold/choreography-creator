@@ -9200,6 +9200,13 @@ var _danfishgold$move_juggler$MoveJuggler$message = function (x) {
 		_elm_lang$core$Basics$identity,
 		_elm_lang$core$Task$succeed(x));
 };
+var _danfishgold$move_juggler$MoveJuggler$badMod = F2(
+	function (k, n) {
+		return function (m) {
+			return _elm_lang$core$Native_Utils.eq(m, 0) ? n : m;
+		}(
+			A2(_elm_lang$core$Basics_ops['%'], k, n));
+	});
 var _danfishgold$move_juggler$MoveJuggler$parseMoves = function (str) {
 	return _elm_lang$core$String$isEmpty(str) ? _elm_lang$core$Array$empty : _elm_lang$core$Array$fromList(
 		A3(
@@ -9218,7 +9225,8 @@ var _danfishgold$move_juggler$MoveJuggler$init = function (_p0) {
 			clicks: {ctor: '[]'},
 			bpm: _p1.bpm,
 			currentMove: _elm_lang$core$Maybe$Nothing,
-			active: false
+			active: true,
+			currentBeat: 0
 		},
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
@@ -9259,9 +9267,9 @@ var _danfishgold$move_juggler$MoveJuggler$saveModel = function (model) {
 			})
 	};
 };
-var _danfishgold$move_juggler$MoveJuggler$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {moves: a, beatCount: b, clicks: c, bpm: d, currentMove: e, active: f};
+var _danfishgold$move_juggler$MoveJuggler$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {moves: a, beatCount: b, clicks: c, bpm: d, currentMove: e, active: f, currentBeat: g};
 	});
 var _danfishgold$move_juggler$MoveJuggler$Flags = F3(
 	function (a, b, c) {
@@ -9286,7 +9294,7 @@ var _danfishgold$move_juggler$MoveJuggler$Tick = {ctor: 'Tick'};
 var _danfishgold$move_juggler$MoveJuggler$subscriptions = function (model) {
 	return model.active ? A2(
 		_elm_lang$core$Time$every,
-		(_elm_lang$core$Basics$toFloat(model.beatCount) * _elm_lang$core$Time$minute) / _elm_lang$core$Basics$toFloat(model.bpm),
+		_elm_lang$core$Time$minute / _elm_lang$core$Basics$toFloat(model.bpm),
 		_elm_lang$core$Basics$always(_danfishgold$move_juggler$MoveJuggler$Tick)) : _elm_lang$core$Platform_Sub$none;
 };
 var _danfishgold$move_juggler$MoveJuggler$DisplayMove = function (a) {
@@ -9325,11 +9333,15 @@ var _danfishgold$move_juggler$MoveJuggler$update = F2(
 			case 'Tick':
 				return {
 					ctor: '_Tuple2',
-					_0: model,
-					_1: A2(
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							currentBeat: A2(_elm_lang$core$Basics_ops['%'], model.currentBeat + 1, model.beatCount)
+						}),
+					_1: _elm_lang$core$Native_Utils.eq(model.currentBeat, 0) ? A2(
 						_elm_lang$core$Random$generate,
 						_danfishgold$move_juggler$MoveJuggler$DisplayMove,
-						_danfishgold$move_juggler$MoveJuggler$randomMove(model))
+						_danfishgold$move_juggler$MoveJuggler$randomMove(model)) : _elm_lang$core$Platform_Cmd$none
 				};
 			case 'BpmButtonClicked':
 				return {
@@ -9554,41 +9566,59 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 					_1: {
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$div,
+							_elm_lang$html$Html$span,
 							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$button,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(_danfishgold$move_juggler$MoveJuggler$StartOrStop),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(
-											model.active ? 'Stop' : 'Start'),
-										_1: {ctor: '[]'}
-									}),
+								_0: _elm_lang$html$Html$text(
+									A2(
+										_elm_lang$core$String$join,
+										'',
+										A2(
+											_elm_lang$core$List$repeat,
+											A2(_danfishgold$move_juggler$MoveJuggler$badMod, model.currentBeat, model.beatCount),
+											'·'))),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
 							ctor: '::',
 							_0: A2(
 								_elm_lang$html$Html$div,
+								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$id('move-display'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										A2(_elm_lang$core$Maybe$withDefault, '', model.currentMove)),
+									_0: A2(
+										_elm_lang$html$Html$button,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Events$onClick(_danfishgold$move_juggler$MoveJuggler$StartOrStop),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												model.active ? 'Stop' : 'Start'),
+											_1: {ctor: '[]'}
+										}),
 									_1: {ctor: '[]'}
 								}),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$div,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$id('move-display'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											A2(_elm_lang$core$Maybe$withDefault, '', model.currentMove)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}

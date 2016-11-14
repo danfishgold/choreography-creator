@@ -15,7 +15,14 @@ import Regex exposing (regex)
 
 
 type alias Model =
-    { moves : Array String, beatCount : Int, clicks : List Time, bpm : Int, currentMove : Maybe String, active : Bool }
+    { moves : Array String
+    , beatCount : Int
+    , clicks : List Time
+    , bpm : Int
+    , currentMove : Maybe String
+    , active : Bool
+    , currentBeat : Int
+    }
 
 
 type Msg
@@ -67,6 +74,17 @@ parseMoves str =
             |> Array.fromList
 
 
+badMod : Int -> Int -> Int
+badMod k n =
+    k
+        % n
+        |> \m ->
+            if m == 0 then
+                n
+            else
+                m
+
+
 
 -- VIEW
 
@@ -111,6 +129,7 @@ view model =
                 else
                     "beat"
             ]
+        , span [] [ text <| String.join "" <| List.repeat (badMod model.currentBeat model.beatCount) "·" ]
         , div []
             [ button [ onClick StartOrStop ]
                 [ text <|
@@ -146,7 +165,12 @@ update msg model =
             ( { model | currentMove = move }, Cmd.none )
 
         Tick ->
-            ( model, Random.generate DisplayMove (randomMove model) )
+            ( { model | currentBeat = (model.currentBeat + 1) % model.beatCount }
+            , if model.currentBeat == 0 then
+                Random.generate DisplayMove (randomMove model)
+              else
+                Cmd.none
+            )
 
         BpmButtonClicked ->
             ( model, Task.perform AddClick Time.now )
@@ -196,7 +220,7 @@ message x =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     if model.active then
-        Time.every (toFloat model.beatCount * minute / toFloat model.bpm) (always Tick)
+        Time.every (minute / toFloat model.bpm) (always Tick)
     else
         Sub.none
 
@@ -254,7 +278,8 @@ init { moves, bpm, beatCount } =
       , clicks = []
       , bpm = bpm
       , currentMove = Nothing
-      , active = False
+      , active = True
+      , currentBeat = 0
       }
     , Cmd.none
     )
