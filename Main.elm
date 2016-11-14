@@ -1,9 +1,8 @@
 port module MoveJuggler exposing (..)
 
-import Html.App exposing (programWithFlags)
-import Html exposing (Html, input, button, div, span, p, text)
+import Html exposing (Html, programWithFlags, input, button, div, span, p, text)
 import Html.Events exposing (onClick, onInput)
-import Html.Attributes exposing (type', min, max, step, defaultValue, value, style, id)
+import Html.Attributes exposing (type_, min, max, step, defaultValue, value, style, id)
 import Time exposing (Time, minute, second)
 import Task
 import String
@@ -83,7 +82,7 @@ view model =
             [ text "BPM: "
             , input
                 [ onInput <| parseInt UpdateBpm
-                , type' "number"
+                , type_ "number"
                 , Html.Attributes.min "30"
                 , Html.Attributes.max "1024"
                 , Html.Attributes.step "1"
@@ -98,7 +97,7 @@ view model =
             [ text "Every "
             , input
                 [ onInput <| parseInt UpdateBeatCount
-                , type' "number"
+                , type_ "number"
                 , Html.Attributes.min "4"
                 , Html.Attributes.max "1024"
                 , Html.Attributes.step "4"
@@ -150,7 +149,7 @@ update msg model =
             ( model, Random.generate DisplayMove (randomMove model) )
 
         BpmButtonClicked ->
-            ( model, Task.perform (always Nop) AddClick Time.now )
+            ( model, Task.perform AddClick Time.now )
 
         AddClick click ->
             let
@@ -160,7 +159,7 @@ update msg model =
                 clickBpm =
                     clicks |> List.reverse |> diff |> avg |> Maybe.map (\dt -> round (minute / dt))
 
-                model' =
+                model_ =
                     { model | clicks = clicks }
 
                 command =
@@ -171,7 +170,7 @@ update msg model =
                         Nothing ->
                             Cmd.none
             in
-                ( model', command )
+                ( model_, command )
 
         StartOrStop ->
             ( { model | active = not model.active }
@@ -187,7 +186,7 @@ update msg model =
 
 message : msg -> Cmd msg
 message x =
-    Task.perform identity identity (Task.succeed x)
+    Task.perform identity (Task.succeed x)
 
 
 
@@ -216,7 +215,7 @@ randomMove model =
 -- MAIN
 
 
-main : Program Flags
+main : Program Flags Model Msg
 main =
     programWithFlags
         { init = init
