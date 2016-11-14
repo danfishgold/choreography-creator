@@ -1,0 +1,56 @@
+<html>
+<head>
+	<title>Move Juggler</title>
+</head>
+
+<style type="text/css">
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+#main-div {
+	width: 80%;
+	margin: 50px auto;
+	display: flex;
+	flex-direction: column;
+}
+
+
+#moves-div {
+	display: flex;
+}
+
+#move-display {
+	height: 700px;
+	text-align: center;
+	font-size: 300px;
+	vertical-align: middle;
+}
+
+
+</style>
+
+
+<body>
+
+<script src="juggler.js"></script>
+<script type="text/javascript">
+
+
+var moves = window.localStorage.getItem("juggler-moves") || "Crazy Knees, Camel Walk, Slide"
+var bpm = +window.localStorage.getItem("juggler-bpm") || 120
+var beatCount = +window.localStorage.getItem("juggler-beat-count") || 8
+
+var app = Elm.MoveJuggler.fullscreen({'moves': moves, 'bpm': bpm, 'beatCount': beatCount})
+
+app.ports.save.subscribe(function(model) {
+	window.localStorage.setItem("juggler-moves", model.moves)
+	window.localStorage.setItem("juggler-bpm", model.bpm)
+	window.localStorage.setItem("juggler-beat-count", model.beatCount)
+})
+
+</script>
+</body>
+</html>
