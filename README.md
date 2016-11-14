@@ -1,13 +1,13 @@
 # Move Juggler
 Generate random Jazz routines.
 
+[Check it out](https://danfishgold.github.io/move-juggler)
+
 Based on [Dror's version](http://www.math.tau.ac.il/~drorspei/MoveJuggler.html) but includes some extra features:
 
 * A reverse-metronome — click it on every beat and it'll estimate the BPM of the song.
 * A Start/Stop button.
 * It automatically saves your last settings (moves, BPM and beat count.)
-
-Check it out [here](https://danfishgold.github.io/move-juggler).
 
 ## How to Run
 
