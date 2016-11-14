@@ -9200,13 +9200,64 @@ var _danfishgold$move_juggler$MoveJuggler$message = function (x) {
 		_elm_lang$core$Basics$identity,
 		_elm_lang$core$Task$succeed(x));
 };
-var _danfishgold$move_juggler$MoveJuggler$badMod = F2(
-	function (k, n) {
-		return function (m) {
-			return _elm_lang$core$Native_Utils.eq(m, 0) ? n : m;
-		}(
-			A2(_elm_lang$core$Basics_ops['%'], k, n));
-	});
+var _danfishgold$move_juggler$MoveJuggler$beatTicker = function (model) {
+	var n = model.beatCount;
+	var k = _elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], model.currentBeat, n),
+		0) ? n : model.currentBeat;
+	return A2(
+		_elm_lang$html$Html$span,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$span,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'color', _1: 'black'},
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$String$join,
+							'',
+							A2(_elm_lang$core$List$repeat, k, '·'))),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$span,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$style(
+							{
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'color', _1: 'gray'},
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(
+								_elm_lang$core$String$join,
+								'',
+								A2(_elm_lang$core$List$repeat, n - k, '·'))),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _danfishgold$move_juggler$MoveJuggler$parseMoves = function (str) {
 	return _elm_lang$core$String$isEmpty(str) ? _elm_lang$core$Array$empty : _elm_lang$core$Array$fromList(
 		A3(
@@ -9565,21 +9616,7 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 						}),
 					_1: {
 						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$span,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									A2(
-										_elm_lang$core$String$join,
-										'',
-										A2(
-											_elm_lang$core$List$repeat,
-											A2(_danfishgold$move_juggler$MoveJuggler$badMod, model.currentBeat, model.beatCount),
-											'·'))),
-								_1: {ctor: '[]'}
-							}),
+						_0: _danfishgold$move_juggler$MoveJuggler$beatTicker(model),
 						_1: {
 							ctor: '::',
 							_0: A2(

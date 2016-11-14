@@ -74,17 +74,6 @@ parseMoves str =
             |> Array.fromList
 
 
-badMod : Int -> Int -> Int
-badMod k n =
-    k
-        % n
-        |> \m ->
-            if m == 0 then
-                n
-            else
-                m
-
-
 
 -- VIEW
 
@@ -129,7 +118,7 @@ view model =
                 else
                     "beat"
             ]
-        , span [] [ text <| String.join "" <| List.repeat (badMod model.currentBeat model.beatCount) "·" ]
+        , beatTicker model
         , div []
             [ button [ onClick StartOrStop ]
                 [ text <|
@@ -143,6 +132,24 @@ view model =
             [ text (model.currentMove |> Maybe.withDefault "")
             ]
         ]
+
+
+beatTicker : Model -> Html Msg
+beatTicker model =
+    let
+        n =
+            model.beatCount
+
+        k =
+            if model.currentBeat % n == 0 then
+                n
+            else
+                model.currentBeat
+    in
+        span []
+            [ span [ style [ ( "color", "black" ) ] ] [ text <| String.join "" <| List.repeat k "·" ]
+            , span [ style [ ( "color", "gray" ) ] ] [ text <| String.join "" <| List.repeat (n - k) "·" ]
+            ]
 
 
 
