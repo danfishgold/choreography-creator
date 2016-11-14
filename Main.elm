@@ -87,36 +87,25 @@ view model =
             ]
         , div []
             [ text "BPM: "
-            , input
+            , intInput { min = 30, max = 1024, step = 1 }
                 [ onInput <| parseInt UpdateBpm
-                , type_ "number"
-                , Html.Attributes.min "30"
-                , Html.Attributes.max "1024"
-                , Html.Attributes.step "1"
                 , value <| toString model.bpm
                 ]
-                []
             , button [ onClick BpmButtonClicked ]
                 [ text "Calculate"
                 ]
             ]
         , div []
             [ text "Every "
-            , input
+            , intInput { min = 4, max = 1024, step = 4 }
                 [ onInput <| parseInt UpdateBeatCount
-                , type_ "number"
-                , Html.Attributes.min "4"
-                , Html.Attributes.max "1024"
-                , Html.Attributes.step "4"
                 , value <| toString model.beatCount
                 ]
-                []
-            , text " "
             , text <|
                 if model.beatCount /= 1 then
-                    "beats"
+                    " beats"
                 else
-                    "beat"
+                    " beat"
             ]
         , beatTicker model
         , div []
@@ -150,6 +139,19 @@ beatTicker model =
             [ span [ style [ ( "color", "black" ) ] ] [ text <| String.join "" <| List.repeat k "·" ]
             , span [ style [ ( "color", "gray" ) ] ] [ text <| String.join "" <| List.repeat (n - k) "·" ]
             ]
+
+
+intInput : { min : Int, max : Int, step : Int } -> List (Html.Attribute msg) -> Html msg
+intInput range attrs =
+    input
+        ([ type_ "number"
+         , Html.Attributes.min <| toString range.min
+         , Html.Attributes.max <| toString range.max
+         , Html.Attributes.step <| toString range.step
+         ]
+            ++ attrs
+        )
+        []
 
 
 

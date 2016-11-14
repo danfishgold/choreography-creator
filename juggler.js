@@ -9200,6 +9200,35 @@ var _danfishgold$move_juggler$MoveJuggler$message = function (x) {
 		_elm_lang$core$Basics$identity,
 		_elm_lang$core$Task$succeed(x));
 };
+var _danfishgold$move_juggler$MoveJuggler$intInput = F2(
+	function (range, attrs) {
+		return A2(
+			_elm_lang$html$Html$input,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$type_('number'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$min(
+							_elm_lang$core$Basics$toString(range.min)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$max(
+								_elm_lang$core$Basics$toString(range.max)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$step(
+									_elm_lang$core$Basics$toString(range.step)),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				},
+				attrs),
+			{ctor: '[]'});
+	});
 var _danfishgold$move_juggler$MoveJuggler$beatTicker = function (model) {
 	var n = model.beatCount;
 	var k = _elm_lang$core$Native_Utils.eq(
@@ -9515,35 +9544,19 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$input,
+								_danfishgold$move_juggler$MoveJuggler$intInput,
+								{min: 30, max: 1024, step: 1},
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onInput(
 										_danfishgold$move_juggler$MoveJuggler$parseInt(_danfishgold$move_juggler$MoveJuggler$UpdateBpm)),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$type_('number'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$min('30'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$max('1024'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$step('1'),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$value(
-															_elm_lang$core$Basics$toString(model.bpm)),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}
+										_0: _elm_lang$html$Html_Attributes$value(
+											_elm_lang$core$Basics$toString(model.bpm)),
+										_1: {ctor: '[]'}
 									}
-								},
-								{ctor: '[]'}),
+								}),
 							_1: {
 								ctor: '::',
 								_0: A2(
@@ -9573,44 +9586,24 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 							_1: {
 								ctor: '::',
 								_0: A2(
-									_elm_lang$html$Html$input,
+									_danfishgold$move_juggler$MoveJuggler$intInput,
+									{min: 4, max: 1024, step: 4},
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html_Events$onInput(
 											_danfishgold$move_juggler$MoveJuggler$parseInt(_danfishgold$move_juggler$MoveJuggler$UpdateBeatCount)),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$type_('number'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$min('4'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$max('1024'),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$step('4'),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$value(
-																_elm_lang$core$Basics$toString(model.beatCount)),
-															_1: {ctor: '[]'}
-														}
-													}
-												}
-											}
+											_0: _elm_lang$html$Html_Attributes$value(
+												_elm_lang$core$Basics$toString(model.beatCount)),
+											_1: {ctor: '[]'}
 										}
-									},
-									{ctor: '[]'}),
+									}),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(' '),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(
-											(!_elm_lang$core$Native_Utils.eq(model.beatCount, 1)) ? 'beats' : 'beat'),
-										_1: {ctor: '[]'}
-									}
+									_0: _elm_lang$html$Html$text(
+										(!_elm_lang$core$Native_Utils.eq(model.beatCount, 1)) ? ' beats' : ' beat'),
+									_1: {ctor: '[]'}
 								}
 							}
 						}),
