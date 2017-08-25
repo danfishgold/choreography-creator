@@ -1564,8 +1564,7 @@ function toString(v)
 	var type = typeof v;
 	if (type === 'function')
 	{
-		var name = v.func ? v.func.name : v.name;
-		return '<function' + (name === '' ? '' : ':') + name + '>';
+		return '<function>';
 	}
 
 	if (type === 'boolean')
@@ -2072,6 +2071,13 @@ var _elm_lang$core$List$sortWith = _elm_lang$core$Native_List.sortWith;
 var _elm_lang$core$List$sortBy = _elm_lang$core$Native_List.sortBy;
 var _elm_lang$core$List$sort = function (xs) {
 	return A2(_elm_lang$core$List$sortBy, _elm_lang$core$Basics$identity, xs);
+};
+var _elm_lang$core$List$singleton = function (value) {
+	return {
+		ctor: '::',
+		_0: value,
+		_1: {ctor: '[]'}
+	};
 };
 var _elm_lang$core$List$drop = F2(
 	function (n, list) {
@@ -2891,7 +2897,7 @@ function endsWith(sub, str)
 function indexes(sub, str)
 {
 	var subLen = sub.length;
-	
+
 	if (subLen < 1)
 	{
 		return _elm_lang$core$Native_List.Nil;
@@ -2904,74 +2910,78 @@ function indexes(sub, str)
 	{
 		is.push(i);
 		i = i + subLen;
-	}	
-	
+	}
+
 	return _elm_lang$core$Native_List.fromArray(is);
 }
+
 
 function toInt(s)
 {
 	var len = s.length;
+
+	// if empty
 	if (len === 0)
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+		return intErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
+
+	// if hex
+	var c = s[0];
+	if (c === '0' && s[1] === 'x')
 	{
-		if (len === 1)
+		for (var i = 2; i < len; ++i)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			var c = s[i];
+			if (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'))
+			{
+				continue;
+			}
+			return intErr(s);
 		}
-		start = 1;
+		return _elm_lang$core$Result$Ok(parseInt(s, 16));
 	}
-	for (var i = start; i < len; ++i)
+
+	// is decimal
+	if (c > '9' || (c < '0' && c !== '-' && c !== '+'))
+	{
+		return intErr(s);
+	}
+	for (var i = 1; i < len; ++i)
 	{
 		var c = s[i];
 		if (c < '0' || '9' < c)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			return intErr(s);
 		}
 	}
+
 	return _elm_lang$core$Result$Ok(parseInt(s, 10));
 }
 
+function intErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int");
+}
+
+
 function toFloat(s)
 {
-	var len = s.length;
-	if (len === 0)
+	// check if it is a hex, octal, or binary number
+	if (s.length === 0 || /[\sxbo]/.test(s))
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
+		return floatErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
-	{
-		if (len === 1)
-		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-		}
-		start = 1;
-	}
-	var dotCount = 0;
-	for (var i = start; i < len; ++i)
-	{
-		var c = s[i];
-		if ('0' <= c && c <= '9')
-		{
-			continue;
-		}
-		if (c === '.')
-		{
-			dotCount += 1;
-			if (dotCount <= 1)
-			{
-				continue;
-			}
-		}
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-	}
-	return _elm_lang$core$Result$Ok(parseFloat(s));
+	var n = +s;
+	// faster isNaN check
+	return n === n ? _elm_lang$core$Result$Ok(n) : floatErr(s);
 }
+
+function floatErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float");
+}
+
 
 function toList(str)
 {
@@ -4407,11 +4417,6 @@ function badToString(problem)
 				problem = problem.rest;
 				break;
 
-			case 'index':
-				context += '[' + problem.index + ']';
-				problem = problem.rest;
-				break;
-
 			case 'oneOf':
 				var problems = problem.problems;
 				for (var i = 0; i < problems.length; i++)
@@ -5112,9 +5117,9 @@ function on(name, options, decoder)
 
 function equalEvents(a, b)
 {
-	if (!a.options === b.options)
+	if (a.options !== b.options)
 	{
-		if (a.stopPropagation !== b.stopPropagation || a.preventDefault !== b.preventDefault)
+		if (a.options.stopPropagation !== b.options.stopPropagation || a.options.preventDefault !== b.options.preventDefault)
 		{
 			return false;
 		}
@@ -5132,7 +5137,7 @@ function mapProperty(func, property)
 	return on(
 		property.realKey,
 		property.value.options,
-		A2(_elm_lang$core$Json$map, func, property.value.decoder)
+		A2(_elm_lang$core$Json_Decode$map, func, property.value.decoder)
 	);
 }
 
@@ -6390,7 +6395,7 @@ function normalRenderer(parentNode, view)
 var rAF =
 	typeof requestAnimationFrame !== 'undefined'
 		? requestAnimationFrame
-		: function(callback) { callback(); };
+		: function(callback) { setTimeout(callback, 1000 / 60); };
 
 function makeStepper(domNode, view, initialVirtualNode, eventNode)
 {
@@ -6731,6 +6736,7 @@ return {
 };
 
 }();
+
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
 
@@ -7274,15 +7280,8 @@ function setupIncomingPort(name, callback)
 		sentBeforeInit.push(value);
 	}
 
-	function postInitSend(incomingValue)
+	function postInitSend(value)
 	{
-		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
-		if (result.ctor === 'Err')
-		{
-			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
-		}
-
-		var value = result._0;
 		var temp = subs;
 		while (temp.ctor !== '[]')
 		{
@@ -7293,7 +7292,13 @@ function setupIncomingPort(name, callback)
 
 	function send(incomingValue)
 	{
-		currentSend(incomingValue);
+		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
+		if (result.ctor === 'Err')
+		{
+			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
+		}
+
+		currentSend(result._0);
 	}
 
 	return { send: send };
@@ -9183,7 +9188,7 @@ var _elm_lang$core$Regex$AtMost = function (a) {
 };
 var _elm_lang$core$Regex$All = {ctor: 'All'};
 
-var _danfishgold$move_juggler$MoveJuggler$randomMove = function (model) {
+var _danfishgold$choreography_creator$Main$randomMove = function (model) {
 	return A2(
 		_elm_lang$core$Random$map,
 		function (i) {
@@ -9194,13 +9199,13 @@ var _danfishgold$move_juggler$MoveJuggler$randomMove = function (model) {
 			0,
 			_elm_lang$core$Array$length(model.moves) - 1));
 };
-var _danfishgold$move_juggler$MoveJuggler$message = function (x) {
+var _danfishgold$choreography_creator$Main$message = function (x) {
 	return A2(
 		_elm_lang$core$Task$perform,
 		_elm_lang$core$Basics$identity,
 		_elm_lang$core$Task$succeed(x));
 };
-var _danfishgold$move_juggler$MoveJuggler$intInput = F2(
+var _danfishgold$choreography_creator$Main$intInput = F2(
 	function (range, attrs) {
 		return A2(
 			_elm_lang$html$Html$input,
@@ -9229,7 +9234,7 @@ var _danfishgold$move_juggler$MoveJuggler$intInput = F2(
 				attrs),
 			{ctor: '[]'});
 	});
-var _danfishgold$move_juggler$MoveJuggler$beatTicker = function (model) {
+var _danfishgold$choreography_creator$Main$beatTicker = function (model) {
 	var n = model.beatCount;
 	var k = _elm_lang$core$Native_Utils.eq(
 		A2(_elm_lang$core$Basics_ops['%'], model.currentBeat, n),
@@ -9287,7 +9292,7 @@ var _danfishgold$move_juggler$MoveJuggler$beatTicker = function (model) {
 			}
 		});
 };
-var _danfishgold$move_juggler$MoveJuggler$parseMoves = function (str) {
+var _danfishgold$choreography_creator$Main$parseMoves = function (str) {
 	return _elm_lang$core$String$isEmpty(str) ? _elm_lang$core$Array$empty : _elm_lang$core$Array$fromList(
 		A3(
 			_elm_lang$core$Regex$split,
@@ -9295,12 +9300,12 @@ var _danfishgold$move_juggler$MoveJuggler$parseMoves = function (str) {
 			_elm_lang$core$Regex$regex('\\s*,\\s*'),
 			str));
 };
-var _danfishgold$move_juggler$MoveJuggler$init = function (_p0) {
+var _danfishgold$choreography_creator$Main$init = function (_p0) {
 	var _p1 = _p0;
 	return {
 		ctor: '_Tuple2',
 		_0: {
-			moves: _danfishgold$move_juggler$MoveJuggler$parseMoves(_p1.moves),
+			moves: _danfishgold$choreography_creator$Main$parseMoves(_p1.moves),
 			beatCount: _p1.beatCount,
 			clicks: {ctor: '[]'},
 			bpm: _p1.bpm,
@@ -9311,13 +9316,13 @@ var _danfishgold$move_juggler$MoveJuggler$init = function (_p0) {
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
 };
-var _danfishgold$move_juggler$MoveJuggler$avg = function (xs) {
+var _danfishgold$choreography_creator$Main$avg = function (xs) {
 	var n = _elm_lang$core$Basics$toFloat(
 		_elm_lang$core$List$length(xs));
 	return _elm_lang$core$Native_Utils.eq(n, 0) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
 		_elm_lang$core$List$sum(xs) / n);
 };
-var _danfishgold$move_juggler$MoveJuggler$diff = function (xs) {
+var _danfishgold$choreography_creator$Main$diff = function (xs) {
 	return A3(
 		_elm_lang$core$List$map2,
 		F2(
@@ -9327,16 +9332,16 @@ var _danfishgold$move_juggler$MoveJuggler$diff = function (xs) {
 		A2(_elm_lang$core$List$drop, 1, xs),
 		xs);
 };
-var _danfishgold$move_juggler$MoveJuggler$save = _elm_lang$core$Native_Platform.outgoingPort(
+var _danfishgold$choreography_creator$Main$save = _elm_lang$core$Native_Platform.outgoingPort(
 	'save',
 	function (v) {
 		return {moves: v.moves, bpm: v.bpm, beatCount: v.beatCount};
 	});
-var _danfishgold$move_juggler$MoveJuggler$saveModel = function (model) {
+var _danfishgold$choreography_creator$Main$saveModel = function (model) {
 	return {
 		ctor: '_Tuple2',
 		_0: model,
-		_1: _danfishgold$move_juggler$MoveJuggler$save(
+		_1: _danfishgold$choreography_creator$Main$save(
 			{
 				moves: A2(
 					_elm_lang$core$String$join,
@@ -9347,58 +9352,58 @@ var _danfishgold$move_juggler$MoveJuggler$saveModel = function (model) {
 			})
 	};
 };
-var _danfishgold$move_juggler$MoveJuggler$Model = F7(
+var _danfishgold$choreography_creator$Main$Model = F7(
 	function (a, b, c, d, e, f, g) {
 		return {moves: a, beatCount: b, clicks: c, bpm: d, currentMove: e, active: f, currentBeat: g};
 	});
-var _danfishgold$move_juggler$MoveJuggler$Flags = F3(
+var _danfishgold$choreography_creator$Main$Flags = F3(
 	function (a, b, c) {
 		return {moves: a, bpm: b, beatCount: c};
 	});
-var _danfishgold$move_juggler$MoveJuggler$Nop = {ctor: 'Nop'};
-var _danfishgold$move_juggler$MoveJuggler$parseInt = F2(
+var _danfishgold$choreography_creator$Main$Nop = {ctor: 'Nop'};
+var _danfishgold$choreography_creator$Main$parseInt = F2(
 	function (fn, str) {
 		var _p2 = _elm_lang$core$String$toInt(str);
 		if (_p2.ctor === 'Ok') {
 			return fn(_p2._0);
 		} else {
-			return _danfishgold$move_juggler$MoveJuggler$Nop;
+			return _danfishgold$choreography_creator$Main$Nop;
 		}
 	});
-var _danfishgold$move_juggler$MoveJuggler$StartOrStop = {ctor: 'StartOrStop'};
-var _danfishgold$move_juggler$MoveJuggler$AddClick = function (a) {
+var _danfishgold$choreography_creator$Main$StartOrStop = {ctor: 'StartOrStop'};
+var _danfishgold$choreography_creator$Main$AddClick = function (a) {
 	return {ctor: 'AddClick', _0: a};
 };
-var _danfishgold$move_juggler$MoveJuggler$BpmButtonClicked = {ctor: 'BpmButtonClicked'};
-var _danfishgold$move_juggler$MoveJuggler$Tick = {ctor: 'Tick'};
-var _danfishgold$move_juggler$MoveJuggler$subscriptions = function (model) {
+var _danfishgold$choreography_creator$Main$BpmButtonClicked = {ctor: 'BpmButtonClicked'};
+var _danfishgold$choreography_creator$Main$Tick = {ctor: 'Tick'};
+var _danfishgold$choreography_creator$Main$subscriptions = function (model) {
 	return model.active ? A2(
 		_elm_lang$core$Time$every,
 		_elm_lang$core$Time$minute / _elm_lang$core$Basics$toFloat(model.bpm),
-		_elm_lang$core$Basics$always(_danfishgold$move_juggler$MoveJuggler$Tick)) : _elm_lang$core$Platform_Sub$none;
+		_elm_lang$core$Basics$always(_danfishgold$choreography_creator$Main$Tick)) : _elm_lang$core$Platform_Sub$none;
 };
-var _danfishgold$move_juggler$MoveJuggler$DisplayMove = function (a) {
+var _danfishgold$choreography_creator$Main$DisplayMove = function (a) {
 	return {ctor: 'DisplayMove', _0: a};
 };
-var _danfishgold$move_juggler$MoveJuggler$UpdateBpm = function (a) {
+var _danfishgold$choreography_creator$Main$UpdateBpm = function (a) {
 	return {ctor: 'UpdateBpm', _0: a};
 };
-var _danfishgold$move_juggler$MoveJuggler$update = F2(
+var _danfishgold$choreography_creator$Main$update = F2(
 	function (msg, model) {
 		var _p3 = msg;
 		switch (_p3.ctor) {
 			case 'UpdateMoves':
-				return _danfishgold$move_juggler$MoveJuggler$saveModel(
+				return _danfishgold$choreography_creator$Main$saveModel(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{moves: _p3._0}));
 			case 'UpdateBeatCount':
-				return _danfishgold$move_juggler$MoveJuggler$saveModel(
+				return _danfishgold$choreography_creator$Main$saveModel(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{beatCount: _p3._0}));
 			case 'UpdateBpm':
-				return _danfishgold$move_juggler$MoveJuggler$saveModel(
+				return _danfishgold$choreography_creator$Main$saveModel(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{bpm: _p3._0}));
@@ -9420,14 +9425,14 @@ var _danfishgold$move_juggler$MoveJuggler$update = F2(
 						}),
 					_1: _elm_lang$core$Native_Utils.eq(model.currentBeat, 0) ? A2(
 						_elm_lang$core$Random$generate,
-						_danfishgold$move_juggler$MoveJuggler$DisplayMove,
-						_danfishgold$move_juggler$MoveJuggler$randomMove(model)) : _elm_lang$core$Platform_Cmd$none
+						_danfishgold$choreography_creator$Main$DisplayMove,
+						_danfishgold$choreography_creator$Main$randomMove(model)) : _elm_lang$core$Platform_Cmd$none
 				};
 			case 'BpmButtonClicked':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: A2(_elm_lang$core$Task$perform, _danfishgold$move_juggler$MoveJuggler$AddClick, _elm_lang$core$Time$now)
+					_1: A2(_elm_lang$core$Task$perform, _danfishgold$choreography_creator$Main$AddClick, _elm_lang$core$Time$now)
 				};
 			case 'AddClick':
 				var _p5 = _p3._0;
@@ -9445,14 +9450,14 @@ var _danfishgold$move_juggler$MoveJuggler$update = F2(
 					function (dt) {
 						return _elm_lang$core$Basics$round(_elm_lang$core$Time$minute / dt);
 					},
-					_danfishgold$move_juggler$MoveJuggler$avg(
-						_danfishgold$move_juggler$MoveJuggler$diff(
+					_danfishgold$choreography_creator$Main$avg(
+						_danfishgold$choreography_creator$Main$diff(
 							_elm_lang$core$List$reverse(clicks))));
 				var command = function () {
 					var _p4 = clickBpm;
 					if (_p4.ctor === 'Just') {
-						return _danfishgold$move_juggler$MoveJuggler$message(
-							_danfishgold$move_juggler$MoveJuggler$UpdateBpm(_p4._0));
+						return _danfishgold$choreography_creator$Main$message(
+							_danfishgold$choreography_creator$Main$UpdateBpm(_p4._0));
 					} else {
 						return _elm_lang$core$Platform_Cmd$none;
 					}
@@ -9467,19 +9472,19 @@ var _danfishgold$move_juggler$MoveJuggler$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{active: !model.active}),
-					_1: (!model.active) ? _danfishgold$move_juggler$MoveJuggler$message(_danfishgold$move_juggler$MoveJuggler$Tick) : _elm_lang$core$Platform_Cmd$none
+					_1: (!model.active) ? _danfishgold$choreography_creator$Main$message(_danfishgold$choreography_creator$Main$Tick) : _elm_lang$core$Platform_Cmd$none
 				};
 			default:
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
-var _danfishgold$move_juggler$MoveJuggler$UpdateBeatCount = function (a) {
+var _danfishgold$choreography_creator$Main$UpdateBeatCount = function (a) {
 	return {ctor: 'UpdateBeatCount', _0: a};
 };
-var _danfishgold$move_juggler$MoveJuggler$UpdateMoves = function (a) {
+var _danfishgold$choreography_creator$Main$UpdateMoves = function (a) {
 	return {ctor: 'UpdateMoves', _0: a};
 };
-var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
+var _danfishgold$choreography_creator$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -9515,8 +9520,8 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onInput(
 										function (_p6) {
-											return _danfishgold$move_juggler$MoveJuggler$UpdateMoves(
-												_danfishgold$move_juggler$MoveJuggler$parseMoves(_p6));
+											return _danfishgold$choreography_creator$Main$UpdateMoves(
+												_danfishgold$choreography_creator$Main$parseMoves(_p6));
 										}),
 									_1: {
 										ctor: '::',
@@ -9544,12 +9549,12 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_danfishgold$move_juggler$MoveJuggler$intInput,
+								_danfishgold$choreography_creator$Main$intInput,
 								{min: 30, max: 1024, step: 1},
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onInput(
-										_danfishgold$move_juggler$MoveJuggler$parseInt(_danfishgold$move_juggler$MoveJuggler$UpdateBpm)),
+										_danfishgold$choreography_creator$Main$parseInt(_danfishgold$choreography_creator$Main$UpdateBpm)),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Attributes$value(
@@ -9563,7 +9568,7 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 									_elm_lang$html$Html$button,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(_danfishgold$move_juggler$MoveJuggler$BpmButtonClicked),
+										_0: _elm_lang$html$Html_Events$onClick(_danfishgold$choreography_creator$Main$BpmButtonClicked),
 										_1: {ctor: '[]'}
 									},
 									{
@@ -9586,12 +9591,12 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 							_1: {
 								ctor: '::',
 								_0: A2(
-									_danfishgold$move_juggler$MoveJuggler$intInput,
+									_danfishgold$choreography_creator$Main$intInput,
 									{min: 4, max: 1024, step: 4},
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html_Events$onInput(
-											_danfishgold$move_juggler$MoveJuggler$parseInt(_danfishgold$move_juggler$MoveJuggler$UpdateBeatCount)),
+											_danfishgold$choreography_creator$Main$parseInt(_danfishgold$choreography_creator$Main$UpdateBeatCount)),
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html_Attributes$value(
@@ -9609,7 +9614,7 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 						}),
 					_1: {
 						ctor: '::',
-						_0: _danfishgold$move_juggler$MoveJuggler$beatTicker(model),
+						_0: _danfishgold$choreography_creator$Main$beatTicker(model),
 						_1: {
 							ctor: '::',
 							_0: A2(
@@ -9621,7 +9626,7 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 										_elm_lang$html$Html$button,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(_danfishgold$move_juggler$MoveJuggler$StartOrStop),
+											_0: _elm_lang$html$Html_Events$onClick(_danfishgold$choreography_creator$Main$StartOrStop),
 											_1: {ctor: '[]'}
 										},
 										{
@@ -9655,8 +9660,8 @@ var _danfishgold$move_juggler$MoveJuggler$view = function (model) {
 			}
 		});
 };
-var _danfishgold$move_juggler$MoveJuggler$main = _elm_lang$html$Html$programWithFlags(
-	{init: _danfishgold$move_juggler$MoveJuggler$init, view: _danfishgold$move_juggler$MoveJuggler$view, update: _danfishgold$move_juggler$MoveJuggler$update, subscriptions: _danfishgold$move_juggler$MoveJuggler$subscriptions})(
+var _danfishgold$choreography_creator$Main$main = _elm_lang$html$Html$programWithFlags(
+	{init: _danfishgold$choreography_creator$Main$init, view: _danfishgold$choreography_creator$Main$view, update: _danfishgold$choreography_creator$Main$update, subscriptions: _danfishgold$choreography_creator$Main$subscriptions})(
 	A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (beatCount) {
@@ -9676,9 +9681,9 @@ var _danfishgold$move_juggler$MoveJuggler$main = _elm_lang$html$Html$programWith
 		A2(_elm_lang$core$Json_Decode$field, 'beatCount', _elm_lang$core$Json_Decode$int)));
 
 var Elm = {};
-Elm['MoveJuggler'] = Elm['MoveJuggler'] || {};
-if (typeof _danfishgold$move_juggler$MoveJuggler$main !== 'undefined') {
-    _danfishgold$move_juggler$MoveJuggler$main(Elm['MoveJuggler'], 'MoveJuggler', undefined);
+Elm['Main'] = Elm['Main'] || {};
+if (typeof _danfishgold$choreography_creator$Main$main !== 'undefined') {
+    _danfishgold$choreography_creator$Main$main(Elm['Main'], 'Main', undefined);
 }
 
 if (typeof define === "function" && define['amd'])
