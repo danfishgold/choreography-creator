@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Move Juggler</title>
+	<title>Choreography Creator</title>
 </head>
 
 <style type="text/css">
@@ -35,20 +35,20 @@ body {
 
 <body>
 
-<script src="juggler.js"></script>
+<script src="elm.js"></script>
 <script type="text/javascript">
 
 
-var moves = window.localStorage.getItem("juggler-moves") || "Crazy Knees, Camel Walk, Slide"
-var bpm = +window.localStorage.getItem("juggler-bpm") || 120
-var beatCount = +window.localStorage.getItem("juggler-beat-count") || 8
+var moves = window.localStorage.getItem("choreo-moves") || "Crazy Knees, Camel Walk, Slide"
+var bpm = +window.localStorage.getItem("choreo-bpm") || 120
+var beatCount = +window.localStorage.getItem("choreo-beat-count") || 8
 
-var app = Elm.MoveJuggler.fullscreen({'moves': moves, 'bpm': bpm, 'beatCount': beatCount})
+var app = Elm.Main.fullscreen({'moves': moves, 'bpm': bpm, 'beatCount': beatCount})
 
 app.ports.save.subscribe(function(model) {
-	window.localStorage.setItem("juggler-moves", model.moves)
-	window.localStorage.setItem("juggler-bpm", model.bpm)
-	window.localStorage.setItem("juggler-beat-count", model.beatCount)
+	window.localStorage.setItem("choreo-moves", model.moves)
+	window.localStorage.setItem("choreo-bpm", model.bpm)
+	window.localStorage.setItem("choreo-beat-count", model.beatCount)
 })
 
 </script>

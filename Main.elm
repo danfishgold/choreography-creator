@@ -1,4 +1,4 @@
-port module MoveJuggler exposing (..)
+port module Main exposing (..)
 
 import Html exposing (Html, programWithFlags, input, button, div, span, p, text)
 import Html.Events exposing (onClick, onInput)

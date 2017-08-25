@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Randomly create Jazz routines.",
-    "repository": "https://github.com/danfishgold/move-juggler.git",
+    "repository": "https://github.com/danfishgold/choreography-creator.git",
     "license": "MIT",
     "source-directories": [
         "."

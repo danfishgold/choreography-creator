@@ -1,7 +1,7 @@
-# Move Juggler
+# Choreography Creator
 Generate random Jazz routines.
 
-[Check it out](https://danfishgold.github.io/move-juggler)
+[Check it out](https://danfishgold.github.io/choreography-creator)
 
 Based on [Dror's version](http://www.math.tau.ac.il/~drorspei/MoveJuggler.html) but includes some extra features:
 
@@ -12,16 +12,16 @@ Based on [Dror's version](http://www.math.tau.ac.il/~drorspei/MoveJuggler.html) 
 ## How to Run
 
 ```
-cd move-juggler
-elm make Main.elm --output juggler.js
+cd choreography-creator
+elm make Main.elm --output elm.js
 open index.html
 ```
 
 Or, using [elm-live](https://github.com/tomekwi/elm-live):
 
 ```
-cd move-juggler
-elm live Main.elm --output juggler.js --open
+cd choreography-creator
+elm live Main.elm --output elm.js --open
 ```
 
 ## License
